@@ -20,14 +20,15 @@ def run_pipeline(files, include_folder: bool, model_name: str, size: int, overla
     """
     kb = {} if kb is None else kb
     with st.status("파이프라인 실행 중…", expanded=True) as status:
+        line, now = None, ""                  # 단계마다 한 줄: '…중' → '✅ 결과'(멈추면 '⛔')로 바꿔 쓴다
         try:
-            line = st.empty()                 # 단계마다 한 줄: '…중' → '✅ 결과'로 바꿔 쓴다
-            line.write("1/4 · 문서 적재 · 파싱 중…")
+            line, now = st.empty(), "1/4 · 문서 적재 · 파싱"
+            line.write(f"{now} 중…")
             docs = kb["docs"] = load_documents(files, include_folder)
             line.write(f"✅ 1/4 · 문서 {len(docs)}개 적재")
 
-            line = st.empty()
-            line.write("2/4 · 청킹 중…")
+            line, now = st.empty(), "2/4 · 청킹"
+            line.write(f"{now} 중…")
             records = kb["records"] = make_chunks(docs, size, overlap)
             kb["size"], kb["overlap"] = size, overlap
             line.write(f"✅ 2/4 · 청크 {len(records)}개")
@@ -35,7 +36,7 @@ def run_pipeline(files, include_folder: bool, model_name: str, size: int, overla
                 status.update(label="문서가 없거나 텍스트 추출 실패", state="error")
                 return None
 
-            line = st.empty()
+            line, now = st.empty(), "3/4 · 임베딩"
             line.write("3/4 · 임베딩 모델 불러오는 중… (처음엔 모델을 내려받느라 오래 걸립니다)")
             model = get_model(model_name)
             kb["model_name"] = model_name
@@ -50,11 +51,13 @@ def run_pipeline(files, include_folder: bool, model_name: str, size: int, overla
             bar.empty()
             line.write(f"✅ 3/4 · 임베딩 {emb.shape[0]} × {emb.shape[1]}")
 
-            line = st.empty()
-            line.write("4/4 · 인덱스 저장 중…")
+            line, now = st.empty(), "4/4 · 인덱스 저장"
+            line.write(f"{now} 중…")
             kb["index"] = build_index(emb)
             line.write(f"✅ 4/4 · 인덱스에 벡터 {emb.shape[0]}개 저장")
         except Exception:
+            if line is not None:
+                line.write(f"⛔ {now} · 여기서 멈춤")
             status.update(label="파이프라인 실행 중 오류", state="error")
             raise
         # '완료 · 문서 N · 청크 N' 문구는 앱의 st.success가 보인다(실습지 · 캡처가 이 문구를 찾는다)
