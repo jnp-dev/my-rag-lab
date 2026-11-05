@@ -52,6 +52,7 @@ from stages.stage1_load_lab import load_documents
 from stages.stage2_chunk_lab import make_chunks
 from stages.stage3_embed_lab import get_model, embed
 from stages.stage4_store_lab import build_index
+from stages.pipeline import run_pipeline
 from stages.stage6_generate_lab import active_provider
 from stages import (stage1_load_lab, stage2_chunk_lab, stage3_embed_lab, stage4_store_lab,
                     stage5_search_lab, stage6_generate_lab, stage7_chat_lab, stage8_eval_lab)
@@ -131,16 +132,11 @@ with st.sidebar:
     if st.button("▶ 전체 파이프라인 실행", width='stretch',
                  help="Stage 1~4를 한 번에 실행(구현 안 된 단계에서 멈춤)"):
         try:
-            kb["docs"] = load_documents(files, include_folder)         # Stage 1
-            kb["records"] = make_chunks(kb["docs"], size, overlap)     # Stage 2
-            if not kb["records"]:
+            # Stage 1~4를 차례로 실행하며 진행 상황을 표시. 끝낸 단계의 결과는 kb에 바로 채워진다
+            if run_pipeline(files, include_folder, model_name, size, overlap,
+                            load_documents, make_chunks, get_model, embed, build_index, kb=kb) is None:
                 st.warning("문서가 없거나 텍스트 추출 실패.")
             else:
-                with st.spinner(f"{len(kb['records'])}개 청크 임베딩 중..."):
-                    kb["model_name"] = model_name
-                    kb["emb"] = embed(kb["records"], get_model(model_name))  # Stage 3
-                    kb["index"] = build_index(kb["emb"])                     # Stage 4
-                kb["size"], kb["overlap"] = size, overlap
                 st.success(f"완료 · 문서 {len(kb['docs'])} · 청크 {len(kb['records'])}")
         except NotImplementedError as e:
             st.warning(f"✏️ 구현이 필요합니다 → {e}")
