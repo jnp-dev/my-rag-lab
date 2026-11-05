@@ -7,10 +7,10 @@
 | 항목 | 내용 | 접근 |
 |------|------|------|
 | `rag_lab/` | 실습 워크북 — `stages/*_lab.py` 의 ✏️TODO 를 채웁니다 | 🟢 공개 |
-| `rag_answer.zip` | 각 TODO의 **정답(기본 동작 코드)** | 🔒 비밀번호 |
-| `rag_solution.zip` | 확장 과제 **모범답안** | 🔒 비밀번호 |
+| `rag_answer.zip` | 각 TODO의 **정답(기본 동작 코드)** | 🟢 공개 |
+| `rag_solution.zip` | 확장 과제 **모범답안** | 🟢 공개 |
 
-> 정답/모범답안 zip의 비밀번호는 **강사 안내**에 따라 받으세요.
+> zip은 암호 없이 바로 풀립니다. 먼저 직접 채워 본 뒤 비교용으로 여세요.
 
 ## 시작하기 (rag_lab)
 
@@ -82,9 +82,9 @@ git pull                     # 강사가 수정본을 올렸다고 하면, 지�
 
 `git clone` 한 번이면 모든 브랜치가 함께 내려옵니다. 브랜치를 옮긴 뒤에는 앱 사이드바의 **🗑️ 상태 초기화** → 1번 탭부터 **이 단계 실행**을 차례로 누릅니다.
 
-## 정답 / 모범답안 열기 (강사용)
+## 정답 / 모범답안 열기
 
 ```bash
-unzip -P <비밀번호> rag_answer.zip      # → rag_answer/   (cd rag_answer && streamlit run app.py)
-unzip -P <비밀번호> rag_solution.zip    # → rag_solution/ (cd rag_solution && streamlit run app_solution.py)
+unzip rag_answer.zip      # → rag_answer/   (cd rag_answer && streamlit run app.py)
+unzip rag_solution.zip    # → rag_solution/ (cd rag_solution && streamlit run app_solution.py)
 ```
