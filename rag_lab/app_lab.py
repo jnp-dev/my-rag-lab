@@ -91,10 +91,14 @@ def safe_render(fn, *args):
         st.error(f"오류: {e}")
 
 
-def run_step(label, key, compute, need_key=None, need_msg=""):
+def run_step(label, key, compute, need_key=None, need_msg="", block_msg=None):
     """'이 단계 실행' 버튼. 누르면 compute() 결과를 kb[key] 에 저장한다.
-    need_key: 선행 단계 산출물 키(없으면 안내만). 성공/실패 모두 앱은 유지된다."""
+    need_key: 선행 단계 산출물 키(없으면 안내만). block_msg: 있으면 실행하지 않고 안내만.
+    성공/실패 모두 앱은 유지된다."""
     if st.button(label, key=f"run_{key}", width='stretch'):
+        if block_msg:
+            st.warning(block_msg)
+            return
         if need_key and need_key not in kb:
             st.warning(f"⚠️ {need_msg}")
             return
@@ -120,7 +124,10 @@ with st.sidebar:
     st.header("입력 & 설정")
     files = st.file_uploader("PDF / TXT / MD", type=["pdf", "txt", "md"],
                              accept_multiple_files=True)
-    include_folder = st.checkbox("docs/ 폴더 포함", value=True)
+    include_folder = st.checkbox("docs/ 폴더 포함", value=False)
+    # 올린 파일도 없고 docs/ 도 꺼져 있으면 실행 버튼은 안내만 보여 준다
+    no_input = None if (files or include_folder) else \
+        "파일을 선택하세요. PDF / TXT / MD를 올리거나 'docs/ 폴더 포함'을 켭니다."
     model_name = MODELS[st.selectbox("임베딩 모델", list(MODELS.keys()))]
     c1, c2 = st.columns(2)
     size = c1.slider("청크 크기", 200, 1000, 500, 50)
@@ -129,8 +136,11 @@ with st.sidebar:
     k = st.slider("top-k", 1, 8, 4)
 
     st.divider()
-    if st.button("▶ 전체 파이프라인 실행", width='stretch',
-                 help="Stage 1~4를 한 번에 실행(구현 안 된 단계에서 멈춤)"):
+    run_all = st.button("▶ 전체 파이프라인 실행", width='stretch',
+                        help="Stage 1~4를 한 번에 실행(구현 안 된 단계에서 멈춤)")
+    if run_all and no_input:
+        st.warning(no_input)
+    elif run_all:
         try:
             # Stage 1~4를 차례로 실행하며 진행 상황을 표시. 끝낸 단계의 결과는 kb에 바로 채워진다
             if run_pipeline(files, include_folder, model_name, size, overlap,
@@ -162,7 +172,7 @@ tabs = st.tabs(["1.적재/파싱", "2.청킹", "3.임베딩", "4.저장",
 # --- Stage 1~4: 각 탭에서 '이 단계 실행' 으로 산출물을 만들고 바로 확인 ---
 with tabs[0]:
     run_step("① 이 단계 실행 · 적재/파싱", "docs",
-             lambda: load_documents(files, include_folder))
+             lambda: load_documents(files, include_folder), block_msg=no_input)
     gated_render("docs", "⬆️ **이 단계 실행** 을 눌러 문서를 적재하세요.",
                  stage1_load_lab.render, kb)
 
