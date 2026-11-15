@@ -11,3 +11,4 @@ python-docx>=1.1
 matplotlib>=3.8
 jupyter>=1.0          # 노트북 실행(rag_pipeline_steps.ipynb)
 ipykernel>=6.0        # Jupyter/VS Code 커널
+plotly>=5.20          # Stage 3 임베딩 3D 산점도 (rag_solution 모범답안)
